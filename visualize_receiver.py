@@ -101,7 +101,7 @@ class VIVEVisualizer:
         self.receiver = receiver
         self.num_trackers = num_trackers
 
-        self.visible_trackers = [1, 2] # 默认显示 Tracker 1 和 2
+        self.visible_trackers = [0, 1] # 显示 Tracker 0 (Right) 和 1 (Left)
         try:
             self.plotter = pv.Plotter(window_size=[1024, 768], title="VIVE Tracker 6D Pose Visualization")
         except Exception as e:
@@ -116,56 +116,43 @@ class VIVEVisualizer:
         self.plotter.camera.focal_point = (0, 0, 0)
         self.plotter.camera.up = (0, 1, 0)
 
-        # 创建 Trackers 的几何体 (Actor)
+        # 创建 Trackers 的几何体 (Actor) 和 标签
         self.tracker_actors = []
-        
-        for i in range(num_trackers):
-            # 创建一个RGB坐标系模型 
-            # 红色 X 轴
-            arrow_x = pv.Arrow(start=(0,0,0), direction=(1,0,0), scale=0.2)
-            arrow_x.point_data['RGB'] = np.tile([255, 0, 0], (arrow_x.n_points, 1))
-            # 绿色 Y 轴
-            arrow_y = pv.Arrow(start=(0,0,0), direction=(0,1,0), scale=0.2)
-            arrow_y.point_data['RGB'] = np.tile([0, 255, 0], (arrow_y.n_points, 1))
-            # 蓝色 Z 轴
-            arrow_z = pv.Arrow(start=(0,0,0), direction=(0,0,1), scale=0.2)
-            arrow_z.point_data['RGB'] = np.tile([0, 0, 255], (arrow_z.n_points, 1))
-            
-            tracker_mesh = arrow_x + arrow_y + arrow_z
-            
-            # 根据配置决定是否显示
-            is_visible = (i in self.visible_trackers)
-            
-            # 注意：add_mesh 返回 actor，我们可以控制 visibility
-            actor = self.plotter.add_mesh(tracker_mesh, scalars='RGB', rgb=True, show_scalar_bar=False, label=f"Tracker {i}")
-            actor.SetVisibility(is_visible)
-            
-            self.tracker_actors.append(actor)
-
         self.tracker_labels = []
         self.label_polydatas = []
-        
+
+        arrow_x = pv.Arrow(start=(0,0,0), direction=(1,0,0), scale=0.2)
+        arrow_x.point_data['RGB'] = np.tile([255, 0, 0], (arrow_x.n_points, 1))
+        arrow_y = pv.Arrow(start=(0,0,0), direction=(0,1,0), scale=0.2)
+        arrow_y.point_data['RGB'] = np.tile([0, 255, 0], (arrow_y.n_points, 1))
+        arrow_z = pv.Arrow(start=(0,0,0), direction=(0,0,1), scale=0.2)
+        arrow_z.point_data['RGB'] = np.tile([0, 0, 255], (arrow_z.n_points, 1))
+        tracker_mesh = arrow_x + arrow_y + arrow_z
+
         for i in range(num_trackers):
-             # 手动创建 PolyData
-             poly = pv.PolyData([[0.0, 0.0, 0.0]])
-             # 添加标签数据
-             poly["labels"] = [f"Tracker {i}"]
-             self.label_polydatas.append(poly)
-             
-             # 根据配置决定是否显示
-             is_visible = (i in self.visible_trackers)
-             
-             # add_point_labels 可以接受 PolyData
-             label_actor = self.plotter.add_point_labels(
-                 poly, 
-                 "labels",
-                 point_size=0,
-                 font_size=20,
-                 text_color="white",
-                 always_visible=True
-             )
-             label_actor.SetVisibility(is_visible)
-             self.tracker_labels.append(label_actor)
+            label_text = f"Tracker {i}"
+            if i == 0: label_text = "Right"
+            elif i == 1: label_text = "Left"
+
+            is_visible = (i in self.visible_trackers)
+
+            actor = self.plotter.add_mesh(tracker_mesh.copy(), scalars='RGB', rgb=True, show_scalar_bar=False, label=label_text)
+            actor.SetVisibility(is_visible)
+            self.tracker_actors.append(actor)
+
+            poly = pv.PolyData([[0.0, 0.0, 0.0]])
+            poly["labels"] = [label_text]
+            self.label_polydatas.append(poly)
+            label_actor = self.plotter.add_point_labels(
+                poly, 
+                "labels",
+                point_size=0,
+                font_size=20,
+                text_color="white",
+                always_visible=True
+            )
+            label_actor.SetVisibility(is_visible)
+            self.tracker_labels.append(label_actor)
 
         # 添加一个固定的世界坐标系作为参考
         self.plotter.add_axes(interactive=False)
@@ -231,7 +218,10 @@ class VIVEVisualizer:
                 
                 # 更新坐标显示字符串
                 if i in self.visible_trackers:
-                    tracker_status_texts[i] = f"Pos: ({pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f})"
+                    label_text = f"Tracker {i}"
+                    if i == 0: label_text = "Right"
+                    elif i == 1: label_text = "Left"
+                    tracker_status_texts[i] = f"{label_text}: ({pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f})"
                 
                 mat4x4 = np.eye(4)
                 mat4x4[:3, :3] = rot
@@ -246,7 +236,7 @@ class VIVEVisualizer:
             
             # 更新右下角文本
             if self.coord_text_actor:
-                status_str = "\n".join([f"Tracker {k}: {v}" for k, v in sorted(tracker_status_texts.items())])
+                status_str = "\n".join([v for k, v in sorted(tracker_status_texts.items())])
                 self.coord_text_actor.SetInput(status_str)
 
     def run(self):

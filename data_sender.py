@@ -23,41 +23,8 @@ print(f"开始向 {UBUNTU_IP}:{PORT} 发送数据...")
 # 使用 'f' 代表一个4字节的单精度浮点数。'21f' 表示21个浮点数。
 # '<' 表示使用小端字节序（在x86架构的Windows和Ubuntu上是默认的，显式指定更具兼容性）
 format_string = f'<{NUM_FLOATS}f'
-v = triad_openvr.triad_openvr()
+v = triad_openvr.triad_openvr("triad_openvr/config.json")
 v.print_discovered_objects()
-
-
-# while True:
-#     txt = ""
-#     print("________________")
-    
-#     try:
-#         for each in v.devices["tracker_0"].get_pose_euler():
-#             txt += f"{each:0.3f} "
-#             txt += " "
-#         print("\r" + txt, end = " ")
-        
-#     except Exception as e:
-#         print("Error:", e)
-#     try:
-#         for each in v.devices["tracker_1"].get_pose_euler():
-#             txt += f"{each:0.3f} "
-#             txt += " "
-#         print("\r" + txt, end = " ")
-#     except Exception as e:
-#         print("Error:", e)
-#     try:
-#         for each in v.devices["tracker_2"].get_pose_euler():
-#             txt += f"{each:0.3f} "
-#             txt += " "
-#         print("\r" + txt, end = " ")
-#     except Exception as e:
-#         print("Error:", e)
-    
-#     print("________________")
-
-#     time.sleep(0.01)
-    
 print("sending vive data...")    
 
 try:
@@ -68,30 +35,22 @@ try:
         zero_pad = [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.]  # 用于填充的零值列表
         valid_data = False
         try:
-            # data_to_send.extend(v.devices["tracker_0"].get_pose_quaternion_robust())
-            # data_to_send.extend(v.devices["tracker_0"].get_pose_quaternion_tfs())
+            get_pose_matrix = v.devices["tracker_right"].get_pose_matrix()
+            data_to_send.extend(matrix_to_flat_list(get_pose_matrix))
+            valid_data = True
+        except Exception as e:
+            data_to_send.extend(zero_pad)
+        try:
+            get_pose_matrix = v.devices["tracker_left"].get_pose_matrix()
+            data_to_send.extend(matrix_to_flat_list(get_pose_matrix))
+            valid_data = True
+        except Exception as e:
+            data_to_send.extend(zero_pad)
+        try:
             get_pose_matrix = v.devices["tracker_0"].get_pose_matrix()
             data_to_send.extend(matrix_to_flat_list(get_pose_matrix))
             valid_data = True
         except Exception as e:
-            # print("tracker_0 error:", e)
-            data_to_send.extend(zero_pad)
-        try:
-            # data_to_send.extend(v.devices["tracker_1"].get_pose_quaternion_tfs())
-            # print(np.array(data_to_send) - np.array((v.devices["tracker_1"].get_pose_quaternion_tfs())))
-            get_pose_matrix = v.devices["tracker_1"].get_pose_matrix()
-            data_to_send.extend(matrix_to_flat_list(get_pose_matrix))
-            valid_data = True
-        except Exception as e:
-            print("tracker_1 error:", e)
-            data_to_send.extend(zero_pad)
-        try:
-            # data_to_send.extend(v.devices["tracker_2"].get_pose_quaternion_tfs())
-            get_pose_matrix = v.devices["tracker_2"].get_pose_matrix()
-            data_to_send.extend(matrix_to_flat_list(get_pose_matrix))
-            valid_data = True
-        except Exception as e:
-            # print("tracker_2 error:", e)
             data_to_send.extend(zero_pad)
         
         i += 1

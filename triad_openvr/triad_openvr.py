@@ -319,7 +319,7 @@ class triad_openvr():
             # Iterate through the pose list to find the active devices and determine their type
             for i in range(openvr.k_unMaxTrackedDeviceCount):
                 if poses[i].bDeviceIsConnected:
-                    device_serial = self.vr.getStringTrackedDeviceProperty(i,openvr.Prop_SerialNumber_String).encode('utf-8')
+                    device_serial = self.vr.getStringTrackedDeviceProperty(i,openvr.Prop_SerialNumber_String)
                     for device in config['devices']:
                         if device_serial == device['serial']:
                             device_name = device['name']
@@ -355,17 +355,17 @@ class triad_openvr():
         i = tracked_device_index
         device_class = self.vr.getTrackedDeviceClass(i)
         if (device_class == openvr.TrackedDeviceClass_Controller):
-            device_name = "controller_"+str(len(self.object_names["Controller"])+1)
+            device_name = "controller_"+str(len(self.object_names["Controller"]))
             self.object_names["Controller"].append(device_name)
             self.devices[device_name] = vr_tracked_device(self.vr,i,"Controller")
             self.device_index_map[i] = device_name
         elif (device_class == openvr.TrackedDeviceClass_HMD):
-            device_name = "hmd_"+str(len(self.object_names["HMD"])+1)
+            device_name = "hmd_"+str(len(self.object_names["HMD"]))
             self.object_names["HMD"].append(device_name)
             self.devices[device_name] = vr_tracked_device(self.vr,i,"HMD")
             self.device_index_map[i] = device_name
         elif (device_class == openvr.TrackedDeviceClass_GenericTracker):
-            device_name = "tracker_"+str(len(self.object_names["Tracker"])+1)
+            device_name = "tracker_"+str(len(self.object_names["Tracker"]))
             self.object_names["Tracker"].append(device_name)
             self.devices[device_name] = vr_tracked_device(self.vr,i,"Tracker")
             self.device_index_map[i] = device_name
