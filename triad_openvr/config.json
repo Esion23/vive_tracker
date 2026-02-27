@@ -1,0 +1,29 @@
+{
+    "devices":[
+        {
+          "name": "tracking_reference_0",
+          "type": "Tracking Reference",
+          "serial":"LHB-E9D6A88C"
+        },
+        {
+          "name": "tracking_reference_1",
+          "type": "Tracking Reference",
+          "serial":"LHB-FA47E53E"
+        },
+        {
+          "name": "tracker_1",
+          "type": "Tracker",
+          "serial":"LHR-C64C801D"
+        },
+        {
+          "name": "tracker_0",
+          "type": "Tracker",
+          "serial":"3A-A33H04688"
+        },
+        {
+          "name": "tracker_2",
+          "type": "Tracker",
+          "serial":"LHR-BE15787F"
+        }
+    ]
+}
